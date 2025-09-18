@@ -1,9 +1,11 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
 from datetime import datetime, timedelta
+from win10toast import ToastNotifier
 import threading
 # from src import taskmanager
 
+notifier= ToastNotifier()
 def add_placeholder(entry, placeholder_text):
         def on_focus_in(event):
             if entry.get() == placeholder_text:
@@ -47,7 +49,7 @@ class TaskManagerApp:
         tk.Button(control_frame, text="Add Task", command=self.open_add_modal).pack(side=tk.LEFT, padx=5)
 
         self.filter_var = tk.StringVar(value="All")
-        ttk.Combobox(control_frame, textvariable=self.filter_var, values=["All", "Completed", "Overdue"], state="readonly").pack(side=tk.LEFT)
+        ttk.Combobox(control_frame, textvariable=self.filter_var, values=["All", "Completed", "Overdue", "Pending"], state="readonly").pack(side=tk.LEFT)
         tk.Button(control_frame, text="Apply Filter", command=self.update_task_list).pack(side=tk.LEFT, padx=5)
 
         # Progress Bar
@@ -119,6 +121,8 @@ class TaskManagerApp:
             return [t for t in self.tasks if t.completed]
         elif filter_type == "Overdue":
             return [t for t in self.tasks if t.is_overdue()]
+        elif filter_type == "Pending":
+            return[t for t in self.tasks if not t.completed and not t.is_overdue()]
         return self.tasks
 
     def toggle_complete(self, event):
@@ -142,13 +146,24 @@ class TaskManagerApp:
 
     def start_notification_thread(self):
         def notify():
+            notified_deadlines = set()
             while True:
+                now = datetime.now()
                 for task in self.tasks:
+                    # Notify if overdue
                     if task.is_overdue():
-                        self.root.after(0, lambda: messagebox.showwarning("Overdue Task", f"'{task.title}' is overdue!"))
-                threading.Event().wait(1800)  # Check every 30 minutes
+                        self.root.after(0, lambda t=task: messagebox.showwarning("Overdue Task", f"'{t.title}' is overdue!"))
+
+                # Notify when deadline is reached (within 1 minute window)
+                if not task.completed and task.deadline <= now <= task.deadline + timedelta(minutes=1):
+                    if task.title not in notified_deadlines:
+                        self.root.after(0,lambda t=task: notifier.show_toast("Task Deadline Reached", f"'{task.title}' deadline is now!", duration=10))
+                        notified_deadlines.add(task.title)
+
+                    threading.Event().wait(60)  # Check every minute
 
         threading.Thread(target=notify, daemon=True).start()
+
 
 if __name__ == "__main__":
     root = tk.Tk()
