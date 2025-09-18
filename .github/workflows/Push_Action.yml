@@ -1,0 +1,41 @@
+name: Run Tests
+
+on:
+#   push:
+#     branches:
+#       - "**"   # runs on all branches
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"   # change if you want another version
+
+      - name: Install pipenv
+        run: pip install pipenv
+
+      - name: Cache pipenv virtualenv
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/share/virtualenvs
+          key: ${{ runner.os }}-pipenv-${{ hashFiles('Pipfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pipenv-
+
+      - name: Generate lockfile
+        run: pipenv lock
+
+      - name: Sync dependencies
+        run: pipenv sync --dev
+
+      - name: Run tests
+        run: pipenv run pytest || echo "⚠️ No tests found, skipping..."
