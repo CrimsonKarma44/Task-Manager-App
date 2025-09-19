@@ -1,49 +1,30 @@
+import threading
+
 import tkinter as tk
 from tkinter import ttk, messagebox
 from datetime import datetime, timedelta
 from win10toast import ToastNotifier
-import threading
-# from src import taskmanager
 
-notifier= ToastNotifier()
-def add_placeholder(entry, placeholder_text):
-        def on_focus_in(event):
-            if entry.get() == placeholder_text:
-                entry.delete(0, tk.END)
-                entry.config(fg='black')  # restore normal text color
+from models.task import Task
+from models.taskmanager import TaskManager
+from utils.lib import add_placeholder
+from utils.setup import load_config
 
-        def on_focus_out(event):
-            if entry.get() == '':
-                entry.insert(0, placeholder_text)
-                entry.config(fg='gray')   # placeholder color
-
-        entry.insert(0, placeholder_text)
-        entry.config(fg='gray')
-        entry.bind('<FocusIn>', on_focus_in)
-        entry.bind('<FocusOut>', on_focus_out)
-
-class Task:
-    def __init__(self, title, priority, deadline):
-        self.title = title
-        self.priority = priority
-        self.deadline = deadline
-        self.completed = False
-
-    def is_overdue(self):
-        return not self.completed and datetime.now() > self.deadline
+notifier = ToastNotifier()
 
 class TaskManagerApp:
-    def __init__(self, root):
-        self.root = root
+    def __init__(self, root: tk.Tk, manager: TaskManager):
+        self.root:tk.Tk = root
+        self.tasks:TaskManager = manager
         self.root.title("Task Manager")
-        self.tasks = []
 
         self.setup_ui()
+        self.update_task_list()
         self.start_notification_thread()
 
     def setup_ui(self):
         # Controls
-        control_frame = tk.Frame(self.root)
+        control_frame:tk.Frame = tk.Frame(self.root)
         control_frame.pack(pady=10)
 
         tk.Button(control_frame, text="Add Task", command=self.open_add_modal).pack(side=tk.LEFT, padx=5)
@@ -51,6 +32,11 @@ class TaskManagerApp:
         self.filter_var = tk.StringVar(value="All")
         ttk.Combobox(control_frame, textvariable=self.filter_var, values=["All", "Completed", "Overdue", "Pending"], state="readonly").pack(side=tk.LEFT)
         tk.Button(control_frame, text="Apply Filter", command=self.update_task_list).pack(side=tk.LEFT, padx=5)
+
+        # --- Add Clear Buttons ---
+        tk.Button(control_frame, text="Clear All Tasks", command=self.clear_all_tasks).pack(side=tk.LEFT, padx=5)
+        tk.Button(control_frame, text="Clear Selected Task", command=self.clear_selected_task).pack(side=tk.LEFT, padx=5)
+        # -------------------------
 
         # Progress Bar
         self.progress_var = tk.DoubleVar()
@@ -87,7 +73,7 @@ class TaskManagerApp:
             try:
                 deadline = datetime.strptime(deadline_entry.get(), "%Y-%m-%d %H:%M")
                 task = Task(title_entry.get(), priority_var.get(), deadline)
-                self.tasks.append(task)
+                self.tasks.add_task(task)
                 modal.destroy()
                 self.update_task_list()
             except ValueError:
@@ -98,8 +84,8 @@ class TaskManagerApp:
     def update_task_list(self):
         self.tree.delete(*self.tree.get_children())
         filtered = self.get_filtered_tasks()
-
-        for task in filtered:
+        filter_priority = sorted(filtered, key=lambda x: {"High": 1, "Medium": 2, "Low": 3}[x.priority])
+        for task in filter_priority:
             status = "Completed" if task.completed else "Pending"
             deadline_str = task.deadline.strftime("%Y-%m-%d %H:%M")
             row = (task.title, task.priority, deadline_str, status)
@@ -118,55 +104,84 @@ class TaskManagerApp:
     def get_filtered_tasks(self):
         filter_type = self.filter_var.get()
         if filter_type == "Completed":
-            return [t for t in self.tasks if t.completed]
+            # return [t for t in self.tasks if t.completed]
+            return self.tasks.get_completed_tasks()
+            
         elif filter_type == "Overdue":
-            return [t for t in self.tasks if t.is_overdue()]
+            # return [t for t in self.tasks if t.is_overdue()]
+            return self.tasks.get_overdue_tasks()
+        
         elif filter_type == "Pending":
-            return[t for t in self.tasks if not t.completed and not t.is_overdue()]
-        return self.tasks
+            # return[t for t in self.tasks if not t.completed and not t.is_overdue()]
+            return self.tasks.get_pending_tasks()
+
+        return self.tasks.get_all_tasks()
 
     def toggle_complete(self, event):
         selected = self.tree.selection()
         if selected:
             item = self.tree.item(selected[0])
             title = item["values"][0]
-            for task in self.tasks:
+            for task in self.tasks.get_all_tasks():
                 if task.title == title:
                     task.completed = not task.completed
                     break
             self.update_task_list()
 
     def update_progress(self):
-        if not self.tasks:
+        if not self.tasks.get_all_tasks():
             self.progress_var.set(0)
             return
-        completed = sum(1 for t in self.tasks if t.completed)
-        percent = (completed / len(self.tasks)) * 100
+        completed = sum(1 for t in self.tasks.get_all_tasks() if t.completed)
+        percent = (completed / len(self.tasks.get_all_tasks())) * 100
         self.progress_var.set(percent)
 
+    # adjusted notification thread to use after method for messagebox by Vince 
     def start_notification_thread(self):
         def notify():
             notified_deadlines = set()
             while True:
                 now = datetime.now()
-                for task in self.tasks:
-                    # Notify if overdue
+                for task in self.tasks.get_all_tasks():
+                    # Overdue warning
                     if task.is_overdue():
-                        self.root.after(0, lambda t=task: messagebox.showwarning("Overdue Task", f"'{t.title}' is overdue!"))
+                        self.root.after(
+                            0,
+                            lambda t=task: messagebox.showwarning("Overdue Task", f"'{t.title}' is overdue!")
+                        )
 
-                # Notify when deadline is reached (within 1 minute window)
-                if not task.completed and task.deadline <= now <= task.deadline + timedelta(minutes=1):
-                    if task.title not in notified_deadlines:
-                        self.root.after(0,lambda t=task: notifier.show_toast("Task Deadline Reached", f"'{task.title}' deadline is now!", duration=10))
-                        notified_deadlines.add(task.title)
+                    # Deadline reached notification
+                    if not task.completed and task.deadline <= now <= task.deadline + timedelta(minutes=1):
+                        if task.title not in notified_deadlines:
+                            # Run toast directly in background thread
+                            notifier.show_toast(
+                                "Task Deadline Reached",
+                                f"'{task.title}' deadline is now!",
+                                duration=10,
+                                threaded=True  # <--- important
+                            )
+                            notified_deadlines.add(task.title)
 
-                    threading.Event().wait(60)  # Check every minute
+                # wait once per loop
+                threading.Event().wait(180)
 
         threading.Thread(target=notify, daemon=True).start()
 
+    def clear_all_tasks(self):
+        if messagebox.askyesno("Confirm", "Are you sure you want to clear all tasks?"):
+            self.tasks.clear_tasks()
+            self.tasks.save()
+            self.update_task_list()
 
-if __name__ == "__main__":
-    root = tk.Tk()
-    app = TaskManagerApp(root)
-    root.mainloop()
-
+    def clear_selected_task(self):
+        selected = self.tree.selection()
+        if selected:
+            item = self.tree.item(selected[0])
+            title = item["values"][0]
+            for task in self.tasks.get_all_tasks():
+                if task.title == title:
+                    self.tasks.remove_task(task)
+                    break
+            self.update_task_list()
+        else:
+            messagebox.showinfo("No Selection", "Please select a task to clear.")

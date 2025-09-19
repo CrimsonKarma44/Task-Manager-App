@@ -5,7 +5,7 @@ from datetime import datetime
 class TestTask(unittest.TestCase):
     def test_init(self):
         task = Task("Test Task", priority="High", completed=True)
-        self.assertEqual(task.name, "Test Task")
+        self.assertEqual(task.title, "Test Task")
         self.assertTrue(task.priority)
         self.assertTrue(task.completed)
         self.assertIsNone(task.deadline)
@@ -51,7 +51,7 @@ class TestTask(unittest.TestCase):
             "completed": False
         }
         task = Task.from_dict(d)
-        self.assertEqual(task.name, "FromDict Task")
+        self.assertEqual(task.title, "FromDict Task")
         self.assertFalse(task.priority)
         self.assertEqual(task.deadline, dt)
         self.assertFalse(task.completed)
