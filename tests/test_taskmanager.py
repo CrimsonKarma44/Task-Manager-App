@@ -50,7 +50,7 @@ class TestTaskManager(unittest.TestCase):
         new_manager = TaskManager()
         new_manager.from_json(json_str)
         self.assertEqual(len(new_manager.get_all_tasks()), 3)
-        self.assertEqual(new_manager.get_all_tasks()[0].name, "Task 1")
+        self.assertEqual(new_manager.get_all_tasks()[0].title, "Task 1")
 
 if __name__ == "__main__":
     unittest.main()
