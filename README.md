@@ -94,3 +94,6 @@ pipenv sync
 
 # Run the app
 pipenv run python -m src.main
+
+# Run tests
+pipenv run pytest
