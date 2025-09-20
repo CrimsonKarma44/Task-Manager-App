@@ -84,16 +84,23 @@ Our team collaborated to build the Task Manager App, with each member focusing o
 ---
 
 ## 🚀 How to Run  
-```bash
-# Clone the repo
-git clone https://github.com/group10/task-manager.git
-cd task-manager
-
-# download packages in the pipenv
+#### Commands
+To clone the repo
+```
+git clone https://github.com/group10/Task-Manager-App.git
+cd Task-Manager-App
+```
+To download packages in the pipenv
+```
 pipenv sync
-
-# Run the app
+```
+To Run the app
+```
 pipenv run python -m src.main
-
-# Run tests
+```
+To Run tests
+```
 pipenv run pytest
+```
+Recommended to run them sequentially. 
+Thank you!
