@@ -61,4 +61,4 @@ cd task-manager
 pipenv sync
 
 # Run the app
-pipenv run python src/main.py
+pipenv run python -m src.main

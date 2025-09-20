@@ -5,10 +5,10 @@ from tkinter import ttk, messagebox
 from datetime import datetime, timedelta
 from win10toast import ToastNotifier
 
-from models.task import Task
-from models.taskmanager import TaskManager
-from utils.lib import add_placeholder
-from utils.setup import load_config
+from src.models.task import Task
+from src.models.taskmanager import TaskManager
+from src.utils.lib import add_placeholder
+from src.utils.setup import load_config
 
 notifier = ToastNotifier()
 
