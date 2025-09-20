@@ -5,6 +5,7 @@ name = "pypi"
 
 [packages]
 win10toast = "*"
+dotenv = "*"
 
 [dev-packages]
 pytest = "*"

@@ -5,10 +5,10 @@ from tkinter import ttk, messagebox
 from datetime import datetime, timedelta
 from win10toast import ToastNotifier
 
-from models.task import Task
-from models.taskmanager import TaskManager
-from utils.lib import add_placeholder
-from utils.setup import load_config
+from src.models.task import Task
+from src.models.taskmanager import TaskManager
+from src.utils.lib import add_placeholder
+from src.utils.setup import load_config
 
 notifier = ToastNotifier()
 
@@ -33,10 +33,18 @@ class TaskManagerApp:
         ttk.Combobox(control_frame, textvariable=self.filter_var, values=["All", "Completed", "Overdue", "Pending"], state="readonly").pack(side=tk.LEFT)
         tk.Button(control_frame, text="Apply Filter", command=self.update_task_list).pack(side=tk.LEFT, padx=5)
 
+        # --- Add Search Entry ---
+        tk.Label(control_frame, text="Search:").pack(side=tk.LEFT, padx=5)
+        self.search_var = tk.StringVar()
+        search_entry = tk.Entry(control_frame, textvariable=self.search_var)
+        search_entry.pack(side=tk.LEFT, padx=5)
+        tk.Button(control_frame, text="Search", command=self.update_task_list).pack(side=tk.LEFT, padx=5)
+        # ------------------------
+
         # --- Add Clear Buttons ---
         tk.Button(control_frame, text="Clear All Tasks", command=self.clear_all_tasks).pack(side=tk.LEFT, padx=5)
         tk.Button(control_frame, text="Clear Selected Task", command=self.clear_selected_task).pack(side=tk.LEFT, padx=5)
-        # -------------------------
+    # -------------------------
 
         # Progress Bar
         self.progress_var = tk.DoubleVar()
@@ -103,19 +111,19 @@ class TaskManagerApp:
 
     def get_filtered_tasks(self):
         filter_type = self.filter_var.get()
+        search_pattern = self.search_var.get().strip()
         if filter_type == "Completed":
-            # return [t for t in self.tasks if t.completed]
-            return self.tasks.get_completed_tasks()
-            
+            filtered = self.tasks.get_completed_tasks()
         elif filter_type == "Overdue":
-            # return [t for t in self.tasks if t.is_overdue()]
-            return self.tasks.get_overdue_tasks()
-        
+            filtered = self.tasks.get_overdue_tasks()
         elif filter_type == "Pending":
-            # return[t for t in self.tasks if not t.completed and not t.is_overdue()]
-            return self.tasks.get_pending_tasks()
+            filtered = self.tasks.get_pending_tasks()
+        else:
+            filtered = self.tasks.get_all_tasks()
 
-        return self.tasks.get_all_tasks()
+        if search_pattern:
+            filtered = [task for task in filtered if task in self.tasks.search_tasks(search_pattern)]
+        return filtered
 
     def toggle_complete(self, event):
         selected = self.tree.selection()
