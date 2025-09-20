@@ -41,6 +41,38 @@ This project is a simple task manager application that allows users to create ta
 
 ---
 
+## 👥 Contributions
+
+Our team collaborated to build the Task Manager App, with each member focusing on specific areas:
+
+- **Vincent Princewill (CrimsonKarma44)** – *Project Lead, Backend Developer, Unit tester & DevOps*  
+  - Designed and implemented the task manager’s core logic (task creation, completion, deletion).  
+  - Co-Developed sorting/filtering by deadline and priority.  
+  - Wrote comprehensive unit tests for functionality and edge cases.  
+  - Set up project infrastructure, including folder structure and configuration.  
+  - Implemented GitHub Actions for CI/CD (automated testing and workflows).  
+  - Managed repository structure and overall GitHub project setup.
+  - Ensured clarity in setup instructions, usage guides, and contribution notes.
+
+- **AHakeem-cpu** – *UI/UX Designer & Frontend Contributor*  
+  - Designed and implemented the application’s user interface.
+  - Co-Developed sorting/filtering by deadline and priority.  
+  - Focused on usability and seamless integration with backend logic.  
+
+- **Emmanuel Ogbon (Emmanuel-bee)** – *Documentation Specialist*  
+  - Co-Authored and maintained project documentation.  
+  - Ensured clarity in setup instructions, usage guides, and contribution notes.
+  - Co-Created Demo Video
+  - Refined the README and supplementary docs for accessibility.  
+
+- **Zainab Abubakar (majesty244342)** – *Documentation Specialist*  
+  - Co-Authored and maintained project documentation.  
+  - Ensured clarity in setup instructions, usage guides, and contribution notes.
+  - Co-Created Demo Video  
+  - Refined the README and supplementary docs for accessibility. 
+
+---
+
 ## 🛠️ Tech & Tools  
 - **Language:** Python  
 - **Modules:**  
