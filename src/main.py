@@ -5,10 +5,10 @@ import os
 sys.path.append(os.path.join(os.path.dirname(__file__), 'src'))
 
 # Now import from the src directory
-from ui.GUI import TaskManagerApp
-from utils.kill import on_close
-from models.taskmanager import TaskManager
-from utils.setup import load_config
+from src.ui.GUI import TaskManagerApp
+from src.utils.kill import on_close
+from src.models.taskmanager import TaskManager
+from src.utils.setup import load_config
 
 if __name__ == "__main__":
     root = tk.Tk()
