@@ -1,60 +1,53 @@
-import unittest
+import pytest
+from datetime import datetime, timedelta
 from src.models.task import Task
-from datetime import datetime
 
-class TestTask(unittest.TestCase):
-    def test_init(self):
-        task = Task("Test Task", priority="High", completed=True)
-        self.assertEqual(task.title, "Test Task")
-        self.assertTrue(task.priority)
-        self.assertTrue(task.completed)
-        self.assertIsNone(task.deadline)
+def test_task_initialization_defaults():
+    t = Task("Test Task")
+    assert t.title == "Test Task"
+    assert t.priority == "medium"
+    assert t.deadline is None
+    assert not t.completed
 
-    def test_set_deadline_str(self):
-        task = Task("Deadline Task")
-        task.set_deadline("2025-09-18 12:00")
-        self.assertIsNotNone(task.deadline)
-        self.assertIsInstance(task.deadline, datetime)
-      #   self.assertEqual(task.deadline.year, 2025)
+def test_task_initialization_with_deadline():
+    deadline = datetime.now() + timedelta(days=1)
+    t = Task("Deadline Task", deadline=deadline)
+    assert t.deadline == deadline
 
-    def test_set_deadline_datetime(self):
-        dt = datetime(2025, 9, 18, 12, 0)
-        task = Task("Deadline Task", deadline=dt)
-        self.assertEqual(task.deadline, dt)
+def test_set_deadline_with_str():
+    t = Task("String Deadline")
+    t.set_deadline("2025-09-21 12:00")
+    assert t.deadline == datetime(2025, 9, 21, 12, 0)
 
-    def test_set_deadline_invalid(self):
-        task = Task("Invalid Deadline")
-        with self.assertRaises(ValueError):
-            task.set_deadline("invalid-date")
+def test_set_deadline_with_invalid_str():
+    t = Task("Bad Deadline")
+    with pytest.raises(ValueError):
+        t.set_deadline("bad-format")
 
-    def test_mark_completed(self):
-        task = Task("Incomplete Task")
-        self.assertFalse(task.completed)
-        task.mark_completed()
-        self.assertTrue(task.completed)
+def test_mark_completed():
+    t = Task("Complete Me")
+    t.mark_completed()
+    assert t.completed
 
-    def test_to_dict(self):
-        dt = datetime(2025, 9, 18, 12, 0)
-        task = Task("Dict Task", priority="High", deadline=dt, completed=True)
-        d = task.to_dict()
-        self.assertEqual(d["name"], "Dict Task")
-        self.assertTrue(d["priority"])
-        self.assertEqual(d["deadline"], dt.isoformat())
-        self.assertTrue(d["completed"])
+def test_is_overdue_false_if_completed():
+    t = Task("Not Overdue", deadline=datetime.now() - timedelta(days=1), completed=True)
+    assert not t.is_overdue()
 
-    def test_from_dict(self):
-        dt = datetime(2025, 9, 18, 12, 0)
-        d = {
-            "name": "FromDict Task",
-            "priority": False,
-            "deadline": dt.isoformat(),
-            "completed": False
-        }
-        task = Task.from_dict(d)
-        self.assertEqual(task.title, "FromDict Task")
-        self.assertFalse(task.priority)
-        self.assertEqual(task.deadline, dt)
-        self.assertFalse(task.completed)
+def test_is_overdue_true_if_not_completed_and_past_deadline():
+    t = Task("Overdue", deadline=datetime.now() - timedelta(days=1))
+    assert t.is_overdue()
 
-if __name__ == "__main__":
-    unittest.main()
+def test_to_dict_and_from_dict():
+    deadline = datetime(2025, 9, 21, 12, 0)
+    t = Task("Dict Task", priority="high", deadline=deadline, completed=True)
+    d = t.to_dict()
+    assert d["title"] == "Dict Task"
+    assert d["priority"] == "high"
+    assert d["deadline"] == deadline.isoformat()
+    assert d["completed"] is True
+
+    t2 = Task.from_dict(d)
+    assert t2.title == t.title
+    assert t2.priority == t.priority
+    assert t2.deadline == t.deadline
+    assert t2.completed == t.completed

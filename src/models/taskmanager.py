@@ -1,6 +1,6 @@
 import json
-from models.task import Task
-from utils.setup import ensure_json_file, read_json_file, write_json_file
+from ..models.task import Task
+from ..utils.setup import ensure_json_file, read_json_file, write_json_file
 
 class TaskManager:
     def __init__(self, filepath: str):
