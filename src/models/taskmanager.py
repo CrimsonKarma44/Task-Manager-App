@@ -1,11 +1,10 @@
 import json
 from ..models.task import Task
 from ..utils.setup import ensure_json_file, read_json_file, write_json_file
+import re
 
 class TaskManager:
     def search_tasks(self, pattern: str):
-        """Return tasks whose title matches the regex pattern."""
-        import re
         regex = re.compile(pattern, re.IGNORECASE)
         return [task for task in self.tasks if regex.search(task.title)]
     def __init__(self, filepath: str):

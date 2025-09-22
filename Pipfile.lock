@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "f69ed281d764bdf4b4b1d99250941eef5a3677fe3c50322c19848b21449ab7e0"
+            "sha256": "b3259d8b35064ed1d08ae169ac4434b287887375819ba9080feec780c690eb8d"
         },
         "pipfile-spec": 6,
         "requires": {},
@@ -75,6 +75,35 @@
             ],
             "index": "pypi",
             "version": "==0.9"
+        },
+        "win11toast": {
+            "hashes": [
+                "sha256:1e101516c283884b987969d0b8f27dc79d4b19273243899070c2cd0d6b86cbb4",
+                "sha256:59215bee9bd14e5651603fca791f05ac5932e6b864cb515c8bdfdb2da97b8376"
+            ],
+            "index": "pypi",
+            "version": "==0.35"
+        },
+        "winsdk": {
+            "hashes": [
+                "sha256:1d4fdd1f79b41b64fedfbc478a29112edf2076e1a61001eccb536c0568510e74",
+                "sha256:342b1095cbd937865cee962676e279a1fd28896a0680724fcf9c65157e7ebdb7",
+                "sha256:4f04d3e50eeb8ca5fe4eb2e39785f3fa594199819acdfb23a10aaef4b97699ad",
+                "sha256:6ab69dd65d959d94939c21974a33f4f1dfa625106c8784435ecacbd8ff0bf74d",
+                "sha256:775a55a71e05ec2aa262c1fd67d80f270d4186bbdbbee2f43c9c412cf76f0761",
+                "sha256:786d6b50e4fcb8af2d701d7400c74e1c3f3ab7766ed1dfd516cdd6688072ea87",
+                "sha256:7948bc5d8a02d73b1db043788d32b2988b8e7e29a25e503c21d34478e630eaf1",
+                "sha256:8231ce5f16e1fc88bb7dda0adf35633b5b26101eae3b0799083ca2177f03e4e5",
+                "sha256:8f39ea759626797449371f857c9085b84bb9f3b6d493dc6525e2cedcb3d15ea2",
+                "sha256:90f75c67e166d588a045bcde0117a4631c705904f7af4ac42644479dcf0d8c52",
+                "sha256:9ea4fdad9ca8a542198aee3c753ac164b8e2f550d760bb88815095d64750e0f5",
+                "sha256:c3be3fbf692b8888bac8c0712c490c080ab8976649ef01f9f6365947f4e5a8b1",
+                "sha256:e77bce44a9ff151562bd261b2a1a8255e258bb10696d0d31ef63267a27628af1",
+                "sha256:f12e25bbf0a658270203615677520b8170edf500fba11e0f80359c5dbf090676",
+                "sha256:f4ab469ada19b34ccfc69a148090f98b40a1da1da797b50b9cbba0c090c365a5"
+            ],
+            "markers": "python_version >= '3.8'",
+            "version": "==1.0.0b10"
         }
     },
     "develop": {
