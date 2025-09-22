@@ -4,13 +4,13 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 from datetime import datetime, timedelta
 from win10toast import ToastNotifier
+from tkcalendar import DateEntry
 
 from src.models.task import Task
 from src.models.taskmanager import TaskManager
 from src.utils.lib import add_placeholder
-from src.utils.setup import load_config
 
-notifier = ToastNotifier()
+windows_notifier = ToastNotifier()
 
 class TaskManagerApp:
     def __init__(self, root: tk.Tk, manager: TaskManager):
@@ -18,9 +18,13 @@ class TaskManagerApp:
         self.tasks:TaskManager = manager
         self.root.title("Task Manager")
 
+        self._stop_event = threading.Event()
+        self._notified_deadlines = set()
+
         self.setup_ui()
         self.update_task_list()
         self.start_notification_thread()
+
 
     def setup_ui(self):
         # Controls
@@ -63,31 +67,54 @@ class TaskManagerApp:
         modal = tk.Toplevel(self.root)
         modal.title("Add Task")
 
+        # Title
         tk.Label(modal, text="Title").grid(row=0, column=0, sticky="W", padx=10, pady=5)
         title_entry = tk.Entry(modal)
         title_entry.grid(row=0, column=1, sticky="e", padx=10, pady=5)
         add_placeholder(title_entry, 'Name of Task')
 
+        # Priority
         tk.Label(modal, text="Priority").grid(row=1, column=0, sticky="W", padx=10, pady=5)
         priority_var = tk.StringVar(value="Medium")
-        ttk.Combobox(modal, textvariable=priority_var, values=["Low", "Medium", "High"], state="readonly").grid(row=1, column=1, sticky="e", padx=10, pady=5)
+        ttk.Combobox(
+            modal, textvariable=priority_var, values=["Low", "Medium", "High"], state="readonly"
+        ).grid(row=1, column=1, sticky="e", padx=10, pady=5)
 
+        # Deadline (Date + Time)
         tk.Label(modal, text="Deadline").grid(row=2, column=0, sticky="W", padx=10, pady=5)
-        deadline_entry = tk.Entry(modal)
-        deadline_entry.grid(row=2, column=1, sticky="e", padx=10, pady=5)
-        add_placeholder(deadline_entry, 'YYYY-MM-DD HH:MM')
+
+        # Calendar widget for date
+        deadline_date = DateEntry(modal, date_pattern="yyyy-mm-dd")
+        deadline_date.grid(row=2, column=1, sticky="w", padx=10, pady=5)
+
+        # Time selection (HH:MM)
+        tk.Label(modal, text="Time").grid(row=3, column=0, sticky="W", padx=10, pady=5)
+        hour_var = tk.StringVar(value="12")
+        minute_var = tk.StringVar(value="00")
+
+        tk.Spinbox(modal, from_=0, to=23, wrap=True, textvariable=hour_var, width=5, format="%02.0f").grid(row=3, column=1, sticky="w", padx=(10,0))
+        tk.Spinbox(modal, from_=0, to=59, wrap=True, textvariable=minute_var, width=5, format="%02.0f").grid(row=3, column=1, sticky="e", padx=(0,10))
 
         def save_task():
             try:
-                deadline = datetime.strptime(deadline_entry.get(), "%Y-%m-%d %H:%M")
+                # Get date from calendar
+                date = deadline_date.get()   # e.g. "2025-09-22"
+                hour = hour_var.get().zfill(2)     # ensures "08" instead of "8"
+                minute = minute_var.get().zfill(2)
+
+                deadline = datetime.strptime(f"{date} {hour}:{minute}", "%Y-%m-%d %H:%M")
                 task = Task(title_entry.get(), priority_var.get(), deadline)
                 self.tasks.add_task(task)
                 modal.destroy()
                 self.update_task_list()
+
             except ValueError:
                 messagebox.showerror("Invalid Date", "Please enter deadline in correct format.")
 
-        tk.Button(modal, text="Save ", command=save_task, width=10).grid(row=3, column=0, columnspan=2, pady=10)
+        tk.Button(modal, text="Save ", command=save_task, width=10).grid(row=4, column=0, columnspan=2, pady=10)
+        modal.transient(self.root)
+        modal.grab_set()
+        self.root.wait_window(modal)
 
     def update_task_list(self):
         self.tree.delete(*self.tree.get_children())
@@ -146,32 +173,39 @@ class TaskManagerApp:
 
     # adjusted notification thread to use after method for messagebox by Vince 
     def start_notification_thread(self):
+        self._stop_event.clear()  # Reset stop flag
+        self._notified_deadlines.clear()  # Clear previous notifications
+
         def notify():
-            notified_deadlines = set()
-            while True:
+            
+            while not self._stop_event.is_set():
                 now = datetime.now()
+                notifier = []
                 for task in self.tasks.get_all_tasks():
                     # Overdue warning
                     if task.is_overdue():
-                        self.root.after(
-                            0,
-                            lambda t=task: messagebox.showwarning("Overdue Task", f"'{t.title}' is overdue!")
-                        )
+                        notifier.append(f"➡️ '{task.title}'")
 
                     # Deadline reached notification
                     if not task.completed and task.deadline <= now <= task.deadline + timedelta(minutes=1):
-                        if task.title not in notified_deadlines:
+                        if task.title not in self._notified_deadlines:
                             # Run toast directly in background thread
-                            notifier.show_toast(
+                            self.update_task_list()  # Ensure UI updates
+                            windows_notifier.show_toast(
                                 "Task Deadline Reached",
                                 f"'{task.title}' deadline is now!",
                                 duration=10,
                                 threaded=True  # <--- important
                             )
-                            notified_deadlines.add(task.title)
+                            self._notified_deadlines.add(task.title)
 
+                if notifier:
+                    self.root.after(
+                        0,
+                        lambda t=task: messagebox.showwarning("Overdue Task!!", f"{"\n".join(notifier)}\nis overdue!")
+                    )
                 # wait once per loop
-                threading.Event().wait(180)
+                self._stop_event.wait(60)
 
         threading.Thread(target=notify, daemon=True).start()
 
