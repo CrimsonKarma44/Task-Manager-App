@@ -39,7 +39,7 @@ NITDA Cohort 28 Python advanced project work
 
 <p align="center">
 <video controls width="600">
-  <source src="asserts/vid/final%20video%20project%20recording2.mp4" type="video/mp4">
+  <source src="asserts\vid\Final_Video_Project_Recording2.mp4" type="video/mp4">
   Your browser does not support the video tag.
 </video>
 </p>
