@@ -37,7 +37,8 @@ NITDA Cohort 28 Python advanced project work
 
 ## 🎥 Demo Video
 
-[![Watch the demo](asserts/img/Screenshot%202025-09-22%20194719.png)](asserts/vid/Final_Video_Project_Recording2.mp4)
+[![Watch the demo](asserts/img/Screenshot%202025-09-22%20194719.png)](https://drive.google.com/file/d/16dTxjdKkgbYdAXotNevviNOU5ZddS3vu/view?usp=drivesdk)
+
 
 ## 🖼️ Screenshots
 
